@@ -1,10 +1,3 @@
-"""The final model, kept in one place so validation and the real run match.
-
-Three gradient boosting models that differ only in which inputs they see, with
-their predictions averaged (geometric mean).  In rolling validation the average
-was more stable than any single one, mostly because the market_index column is
-a shaky guide when the market moves faster than the model has seen before.
-"""
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 
@@ -16,8 +9,6 @@ FEATURE_SETS = [FEATURES, WITH_WEIGHT, NO_MARKET]
 
 
 def new_model():
-    # absolute_error = predict the median, so the odd 5-14x rate-per-mile
-    # spikes in the training labels can't drag predictions around
     return HistGradientBoostingRegressor(
         loss="absolute_error",
         learning_rate=0.05,

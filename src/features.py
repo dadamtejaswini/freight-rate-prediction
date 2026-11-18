@@ -1,17 +1,8 @@
-"""Cleaning and feature building for the freight rate model.
-
-Everything here works on the *inputs* only (never on posted_rate), so the same
-functions are used for training, validation and the December chart.
-"""
 import numpy as np
 import pandas as pd
 
 CATEGORICAL = ["pickup", "delivery", "equipment"]
 
-# Rate-per-mile is what really moves with the market, so the model predicts
-# log(rate per mile) and we multiply back by distance at the end.
-# City names are left out on purpose: 12% of the validation loads use cities
-# that never appear in training, so the model leans on coordinates instead.
 NUMERIC = [
     "log_distance", "market_index", "quote_signal",
     "day_market_index", "day_quote_signal",
@@ -32,7 +23,6 @@ def daily_market(frames):
         day_market_index=("market_index", "median"),
         day_quote_signal=("quote_signal", "mean"),
     )
-    # a day with no usable value gets filled from its neighbours
     full = pd.date_range(daily.index.min(), daily.index.max(), freq="D")
     daily = daily.reindex(full).interpolate(limit_direction="both")
     daily.index.name = "date"
@@ -40,11 +30,8 @@ def daily_market(frames):
 
 
 def build_features(df, daily, weight_fill):
-    """df: raw loads. daily: output of daily_market. weight_fill: dict of the
-    median weight per equipment type, learned from training data only."""
     out = df.copy()
 
-    # negative weights are sign errors (|w| looks like a normal weight)
     out["weight"] = out["weight"].abs()
     out["weight_missing"] = out["weight"].isna().astype(int)
     fill = out["equipment"].map(weight_fill)
@@ -66,7 +53,6 @@ def weight_medians(train):
 
 
 def set_categories(frames, train_df):
-    """Give every frame the same category codes as the training set."""
     for col in CATEGORICAL:
         cats = sorted(set(train_df[col].astype(str)))
         for f in frames:

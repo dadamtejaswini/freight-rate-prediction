@@ -1,7 +1,3 @@
-"""Train on all of train_test.csv, then write the three output files.
-
-Run from the repo root:   python src/train_predict.py
-"""
 import os
 os.environ.setdefault("LOKY_MAX_CPU_COUNT", "4")  # silences a harmless Windows warning
 
@@ -48,11 +44,9 @@ def main():
     val = load_csv(DATA / "validation.csv")
     daily = daily_market([train, val])
 
-    # the final fit uses every labelled row
     tr, va = prepare(train, val, daily)
     models = fit(tr)
 
-    # ---- validation predictions ----
     template = pd.read_csv(DATA / "validation_predictions_template.csv")
     va["predicted_rate"] = predict_rate(models, va)
     out = template[["load_id"]].merge(va[["load_id", "predicted_rate"]], on="load_id", how="left")
@@ -61,7 +55,6 @@ def main():
     out.to_csv(ROOT / "validation_predictions.csv", index=False)
     print("wrote validation_predictions.csv", out.shape)
 
-    # ---- December chart predictions ----
     dec = december_inputs(train, val)
     _, dec_feats = prepare(train, dec, daily)
     dec_feats["quote_signal"] = dec_feats["day_quote_signal"]
